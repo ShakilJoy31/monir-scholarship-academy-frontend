@@ -1,0 +1,1 @@
+export const theStar = <span className="text-red-600 font-bold ml-1 text-xl">*</span>; 

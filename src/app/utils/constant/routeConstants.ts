@@ -1,0 +1,1 @@
+// export const baseUrl = 'https://school-management-backend-nine.vercel.app/api/v1'
