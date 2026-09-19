@@ -198,7 +198,10 @@ const TeacherSalaryPayList = () => {
         useBulkCancelTeacherSalaryPayMutation();
 
     const accounts = useMemo(() => accountsResponse?.data || [], [accountsResponse?.data]);
-    const salaryPays: TeacherSalaryPay[] = responseData?.data || [];
+    const salaryPays = useMemo(
+    () => responseData?.data || [],
+    [responseData?.data]
+);
     const totalPages = responseData?.meta?.totalPage || 1;
 
     useEffect(() => {

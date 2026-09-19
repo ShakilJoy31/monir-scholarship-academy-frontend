@@ -15,8 +15,8 @@ const version = "V1.0.0";
 
 export const appConfiguration: IConfigurationProps = {
   appName: "School Management",
-    baseUrl: "https://school-server.fitinfotech.net",
-    // baseUrl: "http://localhost:2000",
+    // baseUrl: "https://school-server.fitinfotech.net",
+    baseUrl: "http://localhost:2000",
   databaseResetAPI: "null",
   favicon: "/devs.png",
   invoiceBanner:"/invoice-bg.jpg",
