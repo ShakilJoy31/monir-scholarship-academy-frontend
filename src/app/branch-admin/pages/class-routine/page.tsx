@@ -143,7 +143,7 @@ const ClassRoutineList = () => {
     const [classes, setClasses] = useState<DropdownOption[]>([]);
     const [sections, setSections] = useState<DropdownOption[]>([]);
     const [streams, setStreams] = useState<DropdownOption[]>([]);
-    const [subjects, setSubjects] = useState<DropdownOption[]>([]);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
     const [teachers, setTeachers] = useState<DropdownOption[]>([]);
     const [slots, setSlots] = useState<Slot[]>([]);
     const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -903,18 +903,13 @@ const ClassRoutineList = () => {
                                                 value={subjectId || ''}
                                                 onChange={(e) => setSubjectId(Number(e.target.value))}
                                                 label="Subject"
-                                                disabled={loadingDropdowns || !classNameId}
+                                                disabled={loadingDropdowns}
                                             >
-                                                {classes?.find(cls => cls.id === classNameId)?.GroupSubject?.map((subject) => (
-                                                    <MenuItem key={subject?.subject?.id} value={subject?.subject?.id}>
-                                                        {subject?.subject?.name}
-                                                    </MenuItem>
-                                                ))}
-                                                {/* {subjects.map((subject) => (
+                                                {subjects.map((subject) => (
                                                     <MenuItem key={subject.id} value={subject.id}>
                                                         {subject.name}
                                                     </MenuItem>
-                                                ))} */}
+                                                ))}
                                             </Select>
                                         </FormControl>
                                     </motion.div>

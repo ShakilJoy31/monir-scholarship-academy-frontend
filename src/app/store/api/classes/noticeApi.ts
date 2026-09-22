@@ -56,7 +56,7 @@ export const noticeApi = baseApi.injectEndpoints({
         // Upload file endpoint
         uploadFile: builder.mutation({
             query: (formData) => ({
-                url: "/file/upload",
+                url: "/document/upload",
                 method: "POST",
                 body: formData,
                 headers: {
@@ -70,6 +70,8 @@ export const noticeApi = baseApi.injectEndpoints({
                 };
             },
         }),
+
+        
     }),
 });
 

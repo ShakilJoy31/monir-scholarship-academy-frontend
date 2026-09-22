@@ -656,6 +656,84 @@ export default function RoleBasedSidebar({
           },
         ],
       },
+        {
+        text: "Routine Management",
+        icon: <ScheduleIcon />,
+        link: "#",
+        roles: ["branch-admin"],
+        children: [
+          {
+            text: "Exam Routine",
+            icon: <HiOutlineDocumentText className="text-2xl" />,
+            link: "/branch-admin/pages/exam-routine",
+            roles: ["branch-admin"],
+          },
+          {
+            text: "Class Routine",
+            icon: <FaCalendarAlt className="text-2xl" />,
+            link: "/branch-admin/pages/class-routine",
+            roles: ["branch-admin"],
+          },
+          {
+            text: "Print Exam Routine",
+            icon: <RiPrinterLine className="text-2xl" />,
+            link: "/branch-admin/pages/checkout-exam-routine",
+            roles: ["branch-admin"],
+          },
+          {
+            text: "Print Class Routine",
+            icon: <RiPrinterLine className="text-2xl" />,
+            link: "/branch-admin/pages/checkout-class-routine",
+            roles: ["branch-admin"],
+          },
+          {
+            text: "Slot Management",
+            icon: <Schedule />,
+            link: "/branch-admin/pages/slot",
+            roles: ["branch-admin"],
+          },
+        ],
+      },
+      {
+        text: "Exam Management",
+        icon: <Assessment />,
+        link: "#",
+        roles: ["branch-admin"],
+        children: [
+          {
+            text: "Exam & Notice",
+            icon: <School />,
+            link: "/branch-admin/pages/exams",
+            roles: ["branch-admin"],
+          },
+        ],
+      },
+      {
+        text: "Result Management",
+        icon: <Assessment />,
+        link: "#",
+        roles: ["branch-admin"],
+        children: [
+          {
+            text: "Subject Wise Result",
+            icon: <FaCodeBranch className="text-2xl" />,
+            link: "/branch-admin/pages/student-result",
+            roles: ["branch-admin"],
+          },
+          {
+            text: "Class Wise Result",
+            icon: <FaCodeBranch className="text-2xl" />,
+            link: "/branch-admin/pages/class-wise-result",
+            roles: ["branch-admin"],
+          },
+          {
+            text: "Upload Mark Sheet",
+            icon: <Sheet />,
+            link: "/branch-admin/pages/upload-mark-sheet",
+            roles: ["branch-admin"],
+          },
+        ],
+      },
       {
         text: "Payroll",
         icon: <AttachMoney className="text-2xl" />,
@@ -897,84 +975,7 @@ export default function RoleBasedSidebar({
           },
         ],
       },
-      {
-        text: "Routine Management",
-        icon: <ScheduleIcon />,
-        link: "#",
-        roles: ["branch-admin"],
-        children: [
-          {
-            text: "Exam Routine",
-            icon: <HiOutlineDocumentText className="text-2xl" />,
-            link: "/branch-admin/pages/exam-routine",
-            roles: ["branch-admin"],
-          },
-          {
-            text: "Class Routine",
-            icon: <FaCalendarAlt className="text-2xl" />,
-            link: "/branch-admin/pages/class-routine",
-            roles: ["branch-admin"],
-          },
-          {
-            text: "Print Exam Routine",
-            icon: <RiPrinterLine className="text-2xl" />,
-            link: "/branch-admin/pages/checkout-exam-routine",
-            roles: ["branch-admin"],
-          },
-          {
-            text: "Print Class Routine",
-            icon: <RiPrinterLine className="text-2xl" />,
-            link: "/branch-admin/pages/checkout-class-routine",
-            roles: ["branch-admin"],
-          },
-          {
-            text: "Slot Management",
-            icon: <Schedule />,
-            link: "/branch-admin/pages/slot",
-            roles: ["branch-admin"],
-          },
-        ],
-      },
-      {
-        text: "Exam Management",
-        icon: <Assessment />,
-        link: "#",
-        roles: ["branch-admin"],
-        children: [
-          {
-            text: "Exam & Notice",
-            icon: <School />,
-            link: "/branch-admin/pages/exams",
-            roles: ["branch-admin"],
-          },
-        ],
-      },
-      {
-        text: "Result Management",
-        icon: <Assessment />,
-        link: "#",
-        roles: ["branch-admin"],
-        children: [
-          {
-            text: "Subject Wise Result",
-            icon: <FaCodeBranch className="text-2xl" />,
-            link: "/branch-admin/pages/student-result",
-            roles: ["branch-admin"],
-          },
-          {
-            text: "Class Wise Result",
-            icon: <FaCodeBranch className="text-2xl" />,
-            link: "/branch-admin/pages/class-wise-result",
-            roles: ["branch-admin"],
-          },
-          {
-            text: "Upload Mark Sheet",
-            icon: <Sheet />,
-            link: "/branch-admin/pages/upload-mark-sheet",
-            roles: ["branch-admin"],
-          },
-        ],
-      },
+    
       {
         text: "Fees Management",
         icon: <AttachMoney />,
