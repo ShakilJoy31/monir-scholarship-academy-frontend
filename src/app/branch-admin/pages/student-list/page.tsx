@@ -57,19 +57,19 @@ interface Teacher extends TeacherFormValues {
   avatar: string;
   studentUniqueId: string;
   // Corrected field names based on API response
-  session?: { 
+  session?: {
     id: number;
     name: string;
   };
-  class?: { 
+  class?: {
     id: number;
     name: string;
   };
-  section?: { 
+  section?: {
     id: number;
     name: string;
   };
-  stream?: { 
+  stream?: {
     id: number;
     name: string;
   };
@@ -110,7 +110,7 @@ const StudentList = () => {
     classId: null,
   });
 
-  const [isUploading, ] = useState(false);
+  const [isUploading,] = useState(false);
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [uploadedData, setUploadedData] = useState<StudentExcelData[]>([]);
   const [createStudent, { isLoading: createLoading }] =
@@ -138,8 +138,8 @@ const StudentList = () => {
     // isLoading: isClassesLoading
   } = useGetAllClassQuery({});
 
-    // const { data: sections } = useGetAllSectionsQuery({});
-    // const { data: streams } = useGetAllStreamsQuery({});
+  // const { data: sections } = useGetAllSectionsQuery({});
+  // const { data: streams } = useGetAllStreamsQuery({});
 
   const {
     isDeleteModalOpen,
@@ -254,270 +254,270 @@ const StudentList = () => {
     },
   ];
 
- // Download Excel Template
-// const downloadExcelTemplate = () => {
-//   // Get the first available options for each dropdown to show as examples
-//   const sampleSession = sessions?.data?.[0];
-//   const sampleClass = classes?.data?.[0];
-//   const sampleSection = sections?.data?.[0];
-//   const sampleStream = streams?.data?.[0];
+  // Download Excel Template
+  // const downloadExcelTemplate = () => {
+  //   // Get the first available options for each dropdown to show as examples
+  //   const sampleSession = sessions?.data?.[0];
+  //   const sampleClass = classes?.data?.[0];
+  //   const sampleSection = sections?.data?.[0];
+  //   const sampleStream = streams?.data?.[0];
 
-//   const templateData: StudentExcelData[] = [
-//     {
-//       SL: 1,
-//       "STUDENT NAME": "John Doe",
-//       "PHONE NUMBER": "0123456789",
-//       PASSWORD: "password123",
-//       SESSION: sampleSession?.name || "2024",
-//       CLASS: sampleClass?.name || "Class 1",
-//       "CLASS ROLL": 1,
-//       SECTION: sampleSection?.name || "A",
-//       STREAM: sampleStream?.name || "Science",
-//     },
-//   ];
+  //   const templateData: StudentExcelData[] = [
+  //     {
+  //       SL: 1,
+  //       "STUDENT NAME": "John Doe",
+  //       "PHONE NUMBER": "0123456789",
+  //       PASSWORD: "password123",
+  //       SESSION: sampleSession?.name || "2024",
+  //       CLASS: sampleClass?.name || "Class 1",
+  //       "CLASS ROLL": 1,
+  //       SECTION: sampleSection?.name || "A",
+  //       STREAM: sampleStream?.name || "Science",
+  //     },
+  //   ];
 
-//   const worksheet = XLSX.utils.json_to_sheet(templateData, {
-//     skipHeader: false,
-//   });
+  //   const worksheet = XLSX.utils.json_to_sheet(templateData, {
+  //     skipHeader: false,
+  //   });
 
-//   // Set column widths
-//   worksheet["!cols"] = [
-//     { wch: 5 }, // SL
-//     { wch: 25 }, // STUDENT NAME
-//     { wch: 15 }, // PHONE NUMBER
-//     { wch: 15 }, // PASSWORD
-//     { wch: 15 }, // SESSION
-//     { wch: 15 }, // CLASS
-//     { wch: 10 }, // CLASS ROLL
-//     { wch: 10 }, // SECTION
-//     { wch: 15 }, // STREAM
-//   ];
+  //   // Set column widths
+  //   worksheet["!cols"] = [
+  //     { wch: 5 }, // SL
+  //     { wch: 25 }, // STUDENT NAME
+  //     { wch: 15 }, // PHONE NUMBER
+  //     { wch: 15 }, // PASSWORD
+  //     { wch: 15 }, // SESSION
+  //     { wch: 15 }, // CLASS
+  //     { wch: 10 }, // CLASS ROLL
+  //     { wch: 10 }, // SECTION
+  //     { wch: 15 }, // STREAM
+  //   ];
 
-//   const workbook = XLSX.utils.book_new();
-//   XLSX.utils.book_append_sheet(workbook, worksheet, "StudentTemplate");
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "StudentTemplate");
 
-//   XLSX.writeFile(workbook, "Student_Template.xlsx", {
-//     bookType: "xlsx",
-//     type: "binary",
-//     compression: true,
-//   });
-// };
+  //   XLSX.writeFile(workbook, "Student_Template.xlsx", {
+  //     bookType: "xlsx",
+  //     type: "binary",
+  //     compression: true,
+  //   });
+  // };
 
-// Handle Excel File Upload
-// const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-//   setIsUploading(true);
-//   const file = e.target.files?.[0];
-//   if (!file) {
-//     setIsUploading(false);
-//     return;
-//   }
+  // Handle Excel File Upload
+  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setIsUploading(true);
+  //   const file = e.target.files?.[0];
+  //   if (!file) {
+  //     setIsUploading(false);
+  //     return;
+  //   }
 
-//   const reader = new FileReader();
-//   reader.onload = async (loadEvent: ProgressEvent<FileReader>) => {
-//     try {
-//       if (!loadEvent.target || !loadEvent.target.result) {
-//         throw new Error("File reading failed");
-//       }
+  //   const reader = new FileReader();
+  //   reader.onload = async (loadEvent: ProgressEvent<FileReader>) => {
+  //     try {
+  //       if (!loadEvent.target || !loadEvent.target.result) {
+  //         throw new Error("File reading failed");
+  //       }
 
-//       const data = loadEvent.target.result as ArrayBuffer;
-//       const workbook = XLSX.read(data, { type: "array" });
-//       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-//       const jsonData =
-//         XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet);
+  //       const data = loadEvent.target.result as ArrayBuffer;
+  //       const workbook = XLSX.read(data, { type: "array" });
+  //       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  //       const jsonData =
+  //         XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet);
 
-//       // Validate and process the data
-//       const validationErrors: string[] = [];
-//       const processedData: StudentExcelData[] = [];
+  //       // Validate and process the data
+  //       const validationErrors: string[] = [];
+  //       const processedData: StudentExcelData[] = [];
 
-//       for (const [index, row] of jsonData.entries()) {
-//         const studentName = row["STUDENT NAME"]?.toString() || "";
-//         const phoneNumber = row["PHONE NUMBER"]?.toString() || "";
-//         const password = row["PASSWORD"]?.toString() || "";
-//         const sessionName = row["SESSION"]?.toString() || "";
-//         const className = row["CLASS"]?.toString() || "";
-//         const classRoll = Number(row["CLASS ROLL"]) || 0;
-//         const sectionName = row["SECTION"]?.toString() || "";
-//         const streamName = row["STREAM"]?.toString() || "";
+  //       for (const [index, row] of jsonData.entries()) {
+  //         const studentName = row["STUDENT NAME"]?.toString() || "";
+  //         const phoneNumber = row["PHONE NUMBER"]?.toString() || "";
+  //         const password = row["PASSWORD"]?.toString() || "";
+  //         const sessionName = row["SESSION"]?.toString() || "";
+  //         const className = row["CLASS"]?.toString() || "";
+  //         const classRoll = Number(row["CLASS ROLL"]) || 0;
+  //         const sectionName = row["SECTION"]?.toString() || "";
+  //         const streamName = row["STREAM"]?.toString() || "";
 
-//         // Validate required fields
-//         if (!studentName) {
-//           validationErrors.push(`Row ${index + 1}: STUDENT NAME is required`);
-//         }
-//         if (!phoneNumber) {
-//           validationErrors.push(`Row ${index + 1}: PHONE NUMBER is required`);
-//         }
-//         if (!password) {
-//           validationErrors.push(`Row ${index + 1}: PASSWORD is required`);
-//         }
+  //         // Validate required fields
+  //         if (!studentName) {
+  //           validationErrors.push(`Row ${index + 1}: STUDENT NAME is required`);
+  //         }
+  //         if (!phoneNumber) {
+  //           validationErrors.push(`Row ${index + 1}: PHONE NUMBER is required`);
+  //         }
+  //         if (!password) {
+  //           validationErrors.push(`Row ${index + 1}: PASSWORD is required`);
+  //         }
 
-//         // Find IDs from names
-//         const session = sessions?.data?.find((s: any) => 
-//           s.name?.toString().toLowerCase() === sessionName.toLowerCase()
-//         );
-//         const classItem = classes?.data?.find((c: any) => 
-//           c.name?.toString().toLowerCase() === className.toLowerCase()
-//         );
-//         const section = sections?.data?.find((s: any) => 
-//           s.name?.toString().toLowerCase() === sectionName.toLowerCase()
-//         );
-//         const stream = streams?.data?.find((s: any) => 
-//           s.name?.toString().toLowerCase() === streamName.toLowerCase()
-//         );
+  //         // Find IDs from names
+  //         const session = sessions?.data?.find((s: any) => 
+  //           s.name?.toString().toLowerCase() === sessionName.toLowerCase()
+  //         );
+  //         const classItem = classes?.data?.find((c: any) => 
+  //           c.name?.toString().toLowerCase() === className.toLowerCase()
+  //         );
+  //         const section = sections?.data?.find((s: any) => 
+  //           s.name?.toString().toLowerCase() === sectionName.toLowerCase()
+  //         );
+  //         const stream = streams?.data?.find((s: any) => 
+  //           s.name?.toString().toLowerCase() === streamName.toLowerCase()
+  //         );
 
-//         // Validate reference fields
-//         if (!session && sessionName) {
-//           validationErrors.push(`Row ${index + 1}: SESSION "${sessionName}" not found`);
-//         }
-//         if (!classItem && className) {
-//           validationErrors.push(`Row ${index + 1}: CLASS "${className}" not found`);
-//         }
-//         if (!section && sectionName) {
-//           validationErrors.push(`Row ${index + 1}: SECTION "${sectionName}" not found`);
-//         }
-//         if (!stream && streamName) {
-//           validationErrors.push(`Row ${index + 1}: STREAM "${streamName}" not found`);
-//         }
+  //         // Validate reference fields
+  //         if (!session && sessionName) {
+  //           validationErrors.push(`Row ${index + 1}: SESSION "${sessionName}" not found`);
+  //         }
+  //         if (!classItem && className) {
+  //           validationErrors.push(`Row ${index + 1}: CLASS "${className}" not found`);
+  //         }
+  //         if (!section && sectionName) {
+  //           validationErrors.push(`Row ${index + 1}: SECTION "${sectionName}" not found`);
+  //         }
+  //         if (!stream && streamName) {
+  //           validationErrors.push(`Row ${index + 1}: STREAM "${streamName}" not found`);
+  //         }
 
-//         processedData.push({
-//           SL: index + 1,
-//           "STUDENT NAME": studentName,
-//           "PHONE NUMBER": phoneNumber,
-//           PASSWORD: password,
-//           SESSION: sessionName,
-//           CLASS: className,
-//           "CLASS ROLL": classRoll,
-//           SECTION: sectionName,
-//           STREAM: streamName,
-//           // Store the found IDs for submission
-//           sessionYearId: session?.id || 0,
-//           classNameId: classItem?.id || 0,
-//           sectionNameId: section?.id || 0,
-//           streamNameId: stream?.id || 0,
-//         });
-//       }
+  //         processedData.push({
+  //           SL: index + 1,
+  //           "STUDENT NAME": studentName,
+  //           "PHONE NUMBER": phoneNumber,
+  //           PASSWORD: password,
+  //           SESSION: sessionName,
+  //           CLASS: className,
+  //           "CLASS ROLL": classRoll,
+  //           SECTION: sectionName,
+  //           STREAM: streamName,
+  //           // Store the found IDs for submission
+  //           sessionYearId: session?.id || 0,
+  //           classNameId: classItem?.id || 0,
+  //           sectionNameId: section?.id || 0,
+  //           streamNameId: stream?.id || 0,
+  //         });
+  //       }
 
-//       // If there are validation errors, show them and stop
-//       if (validationErrors.length > 0) {
-//         validationErrors.forEach(error => {
-//           toastShowing(
-//             error,
-//             "bottom-right",
-//             3000,
-//             "red",
-//             "white"
-//           );
-//         });
-//         throw new Error("Validation failed");
-//       }
+  //       // If there are validation errors, show them and stop
+  //       if (validationErrors.length > 0) {
+  //         validationErrors.forEach(error => {
+  //           toastShowing(
+  //             error,
+  //             "bottom-right",
+  //             3000,
+  //             "red",
+  //             "white"
+  //           );
+  //         });
+  //         throw new Error("Validation failed");
+  //       }
 
-//       setUploadedData(processedData);
-//       setShowUploadSection(true);
+  //       setUploadedData(processedData);
+  //       setShowUploadSection(true);
 
-//       toastShowing(
-//         "Excel file uploaded successfully! Please review and submit.",
-//         "bottom-right",
-//         2000,
-//         "green",
-//         "white"
-//       );
-//     } catch (error) {
-//       console.error("Error parsing Excel file:", error);
-//       if (!error.message.includes("Validation failed")) {
-//         toastShowing(
-//           "Error parsing Excel file. Please check the format.",
-//           "bottom-right",
-//           2000,
-//           "red",
-//           "white"
-//         );
-//       }
-//     } finally {
-//       setIsUploading(false);
-//       // Reset the file input
-//       if (e.target) {
-//         e.target.value = "";
-//       }
-//     }
-//   };
-//   reader.readAsArrayBuffer(file);
-// };
+  //       toastShowing(
+  //         "Excel file uploaded successfully! Please review and submit.",
+  //         "bottom-right",
+  //         2000,
+  //         "green",
+  //         "white"
+  //       );
+  //     } catch (error) {
+  //       console.error("Error parsing Excel file:", error);
+  //       if (!error.message.includes("Validation failed")) {
+  //         toastShowing(
+  //           "Error parsing Excel file. Please check the format.",
+  //           "bottom-right",
+  //           2000,
+  //           "red",
+  //           "white"
+  //         );
+  //       }
+  //     } finally {
+  //       setIsUploading(false);
+  //       // Reset the file input
+  //       if (e.target) {
+  //         e.target.value = "";
+  //       }
+  //     }
+  //   };
+  //   reader.readAsArrayBuffer(file);
+  // };
 
-// Submit Uploaded Data
-const submitUploadedData = async () => {
-  if (uploadedData.length === 0) {
-    toastShowing("No data to submit", "bottom-right", 2000, "red", "white");
-    return;
-  }
-
-  try {
-    // Validate all data before submission
-    const validationErrors: string[] = [];
-    
-    uploadedData.forEach((row, index) => {
-      if (!row.sessionYearId || !row.classNameId || !row.sectionNameId || !row.streamNameId) {
-        validationErrors.push(`Row ${index + 1}: Missing valid reference IDs`);
-      }
-    });
-
-    if (validationErrors.length > 0) {
-      validationErrors.forEach(error => {
-        toastShowing(
-          error,
-          "bottom-right",
-          3000,
-          "red",
-          "white"
-        );
-      });
+  // Submit Uploaded Data
+  const submitUploadedData = async () => {
+    if (uploadedData.length === 0) {
+      toastShowing("No data to submit", "bottom-right", 2000, "red", "white");
       return;
     }
 
-    const studentsPayload = uploadedData.map((row) => ({
-      name: row["STUDENT NAME"],
-      phone: row["PHONE NUMBER"],
-      email: "",
-      password: row["PASSWORD"],
-      sessionYearId: row.sessionYearId,
-      classNameId: row.classNameId,
-      classRoll: row["CLASS ROLL"],
-      sectionNameId: row.sectionNameId,
-      streamNameId: row.streamNameId,
-      gender: "",
-      religion: "",
-      dob: "",
-      bloodGroup: "",
-      address: "",
-      fatherName: "",
-      motherName: "",
-      parentPhone: "",
-      avatar: "",
-      subjects: [],
-    }));
+    try {
+      // Validate all data before submission
+      const validationErrors: string[] = [];
 
-    await createStudent(studentsPayload).unwrap();
+      uploadedData.forEach((row, index) => {
+        if (!row.sessionYearId || !row.classNameId || !row.sectionNameId || !row.streamNameId) {
+          validationErrors.push(`Row ${index + 1}: Missing valid reference IDs`);
+        }
+      });
 
-    toastShowing(
-      `${uploadedData.length} students created successfully!`,
-      "bottom-right",
-      2000,
-      "green",
-      "white"
-    );
+      if (validationErrors.length > 0) {
+        validationErrors.forEach(error => {
+          toastShowing(
+            error,
+            "bottom-right",
+            3000,
+            "red",
+            "white"
+          );
+        });
+        return;
+      }
 
-    setShowUploadSection(false);
-    setUploadedData([]);
-    refetch();
-  } catch (error) {
-    console.error("Failed to create students:", error);
-    toastShowing(
-      "Failed to create students. Please try again.",
-      "bottom-right",
-      2000,
-      "red",
-      "white"
-    );
-  }
-};
+      const studentsPayload = uploadedData.map((row) => ({
+        name: row["STUDENT NAME"],
+        phone: row["PHONE NUMBER"],
+        email: "",
+        password: row["PASSWORD"],
+        sessionYearId: row.sessionYearId,
+        classNameId: row.classNameId,
+        classRoll: row["CLASS ROLL"],
+        sectionNameId: row.sectionNameId,
+        streamNameId: row.streamNameId,
+        gender: "",
+        religion: "",
+        dob: "",
+        bloodGroup: "",
+        address: "",
+        fatherName: "",
+        motherName: "",
+        parentPhone: "",
+        avatar: "",
+        subjects: [],
+      }));
+
+      await createStudent(studentsPayload).unwrap();
+
+      toastShowing(
+        `${uploadedData.length} students created successfully!`,
+        "bottom-right",
+        2000,
+        "green",
+        "white"
+      );
+
+      setShowUploadSection(false);
+      setUploadedData([]);
+      refetch();
+    } catch (error) {
+      console.error("Failed to create students:", error);
+      toastShowing(
+        "Failed to create students. Please try again.",
+        "bottom-right",
+        2000,
+        "red",
+        "white"
+      );
+    }
+  };
 
 
 
@@ -528,101 +528,101 @@ const submitUploadedData = async () => {
   };
 
   // Export Excel with table data
-const exportExcel = () => {
-  if (!students || students.length === 0) {
-    toastShowing(
-      "No student data available to export",
-      "bottom-right",
-      2000,
-      "red",
-      "white"
-    );
-    return;
-  }
+  const exportExcel = () => {
+    if (!students || students.length === 0) {
+      toastShowing(
+        "No student data available to export",
+        "bottom-right",
+        2000,
+        "red",
+        "white"
+      );
+      return;
+    }
 
-  try {
-    // Map the student data to the export format with correct field mappings
-    const exportData = students.map((student, index) => ({
-      SL: index + 1,
-      "STUDENT NAME": student.name || "",
-      "PHONE NUMBER": student.phone || "",
-      EMAIL: student.email || "",
-      PASSWORD: "", // Password is not stored in response for security
-      SESSION: student.session?.name || "", // Changed from sessionYear to session
-      CLASS: student.class?.name || "", // Changed from className to class
-      "CLASS ROLL": student.classRoll || 0,
-      SECTION: student.section?.name || "", // Changed from sectionName to section
-      STREAM: student.stream?.name || "", // Changed from streamName to stream
-      GENDER: student.gender || "",
-      RELIGION: student.religion || "",
-      "DATE OF BIRTH": student.dob || "",
-      "BLOOD GROUP": student.bloodGroup || "",
-      ADDRESS: student.address || "",
-      "FATHER NAME": student.fatherName || "",
-      "MOTHER NAME": student.motherName || "",
-      "PARENT PHONE": student.parentPhone || "",
-      "AVATAR URL": student.avatar || "/default-avatar.png",
-    }));
+    try {
+      // Map the student data to the export format with correct field mappings
+      const exportData = students.map((student, index) => ({
+        SL: index + 1,
+        "STUDENT NAME": student.name || "",
+        "PHONE NUMBER": student.phone || "",
+        EMAIL: student.email || "",
+        PASSWORD: "", // Password is not stored in response for security
+        SESSION: student.session?.name || "", // Changed from sessionYear to session
+        CLASS: student.class?.name || "", // Changed from className to class
+        "CLASS ROLL": student.classRoll || 0,
+        SECTION: student.section?.name || "", // Changed from sectionName to section
+        STREAM: student.stream?.name || "", // Changed from streamName to stream
+        GENDER: student.gender || "",
+        RELIGION: student.religion || "",
+        "DATE OF BIRTH": student.dob || "",
+        "BLOOD GROUP": student.bloodGroup || "",
+        ADDRESS: student.address || "",
+        "FATHER NAME": student.fatherName || "",
+        "MOTHER NAME": student.motherName || "",
+        "PARENT PHONE": student.parentPhone || "",
+        "AVATAR URL": student.avatar || "/default-avatar.png",
+      }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData, {
-      skipHeader: false,
-    });
+      const worksheet = XLSX.utils.json_to_sheet(exportData, {
+        skipHeader: false,
+      });
 
-    // Set column widths for better readability
-    worksheet["!cols"] = [
-      { wch: 5 }, // SL
-      { wch: 25 }, // STUDENT NAME
-      { wch: 15 }, // PHONE NUMBER
-      { wch: 25 }, // EMAIL
-      { wch: 15 }, // PASSWORD
-      { wch: 15 }, // SESSION
-      { wch: 15 }, // CLASS
-      { wch: 10 }, // CLASS ROLL
-      { wch: 10 }, // SECTION
-      { wch: 15 }, // STREAM
-      { wch: 10 }, // GENDER
-      { wch: 10 }, // RELIGION
-      { wch: 12 }, // DATE OF BIRTH
-      { wch: 10 }, // BLOOD GROUP
-      { wch: 30 }, // ADDRESS
-      { wch: 20 }, // FATHER NAME
-      { wch: 20 }, // MOTHER NAME
-      { wch: 15 }, // PARENT PHONE
-      { wch: 30 }, // AVATAR URL
-    ];
+      // Set column widths for better readability
+      worksheet["!cols"] = [
+        { wch: 5 }, // SL
+        { wch: 25 }, // STUDENT NAME
+        { wch: 15 }, // PHONE NUMBER
+        { wch: 25 }, // EMAIL
+        { wch: 15 }, // PASSWORD
+        { wch: 15 }, // SESSION
+        { wch: 15 }, // CLASS
+        { wch: 10 }, // CLASS ROLL
+        { wch: 10 }, // SECTION
+        { wch: 15 }, // STREAM
+        { wch: 10 }, // GENDER
+        { wch: 10 }, // RELIGION
+        { wch: 12 }, // DATE OF BIRTH
+        { wch: 10 }, // BLOOD GROUP
+        { wch: 30 }, // ADDRESS
+        { wch: 20 }, // FATHER NAME
+        { wch: 20 }, // MOTHER NAME
+        { wch: 15 }, // PARENT PHONE
+        { wch: 30 }, // AVATAR URL
+      ];
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "StudentsData");
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "StudentsData");
 
-    // Generate filename with current date
-    const date = new Date();
-    const dateString = date.toISOString().split('T')[0];
-    const fileName = `Students_Data_${dateString}.xlsx`;
+      // Generate filename with current date
+      const date = new Date();
+      const dateString = date.toISOString().split('T')[0];
+      const fileName = `Students_Data_${dateString}.xlsx`;
 
-    XLSX.writeFile(workbook, fileName, {
-      bookType: "xlsx",
-      type: "binary",
-      compression: true,
-    });
+      XLSX.writeFile(workbook, fileName, {
+        bookType: "xlsx",
+        type: "binary",
+        compression: true,
+      });
 
-    toastShowing(
-      `Exported ${students.length} student records successfully!`,
-      "bottom-right",
-      2000,
-      "green",
-      "white"
-    );
-  } catch (error) {
-    console.error("Error exporting Excel file:", error);
-    toastShowing(
-      "Failed to export Excel file. Please try again.",
-      "bottom-right",
-      2000,
-      "red",
-      "white"
-    );
-  }
-};
+      toastShowing(
+        `Exported ${students.length} student records successfully!`,
+        "bottom-right",
+        2000,
+        "green",
+        "white"
+      );
+    } catch (error) {
+      console.error("Error exporting Excel file:", error);
+      toastShowing(
+        "Failed to export Excel file. Please try again.",
+        "bottom-right",
+        2000,
+        "red",
+        "white"
+      );
+    }
+  };
 
   return (
     <Box>
@@ -717,25 +717,25 @@ const exportExcel = () => {
         </div>
       </Box>
 
-                <div className="flex gap-2 justify-end mb-4">
-            <Button
-              variant="contained"
-              startIcon={<Download size={20} />}
-              onClick={exportExcel}
-              sx={{
-                backgroundColor: "#035140",
-                "&:hover": {
-                  backgroundColor: "#024030",
-                },
-                minWidth: "fit-content",
-                height: "36px",
-                marginTop: "8px",
-              }}
-            >
-              EXPORT EXCEL
-            </Button>
+      <div className="flex gap-2 justify-end mb-4">
+        <Button
+          variant="contained"
+          startIcon={<Download size={20} />}
+          onClick={exportExcel}
+          sx={{
+            backgroundColor: "#035140",
+            "&:hover": {
+              backgroundColor: "#024030",
+            },
+            minWidth: "fit-content",
+            height: "36px",
+            marginTop: "8px",
+          }}
+        >
+          EXPORT EXCEL
+        </Button>
 
-            {/* <Button
+        {/* <Button
               variant="contained"
               startIcon={<Download size={20} />}
               onClick={downloadExcelTemplate}
@@ -776,160 +776,160 @@ const exportExcel = () => {
                 onChange={handleFileUpload}
               />
             </Button> */}
+      </div>
+
+      {/* Upload Section */}
+      {showUploadSection && (
+        <Paper sx={{ p: 3, mb: 2, backgroundColor: "#f8f9fa" }}>
+          <Typography variant="h6" gutterBottom>
+            Uploaded Teacher Data ({uploadedData.length} records)
+          </Typography>
+
+          <Box sx={{ maxHeight: 300, overflow: "auto", mb: 2 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#035140", color: "white" }}>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    SL
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Student Name
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Phone
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Session
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Class
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Class Roll
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Section
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Stream
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {uploadedData.map((row, index) => (
+                  <tr key={index}>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row.SL}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row["STUDENT NAME"]}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row["PHONE NUMBER"]}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row.SESSION}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row.CLASS}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row["CLASS ROLL"]}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row.SECTION}
+                    </td>
+                    <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                      {row.STREAM}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Box>
+
+          <div className="flex gap-2">
+            <Button
+              variant="contained"
+              onClick={submitUploadedData}
+              disabled={createLoading || uploadedData.length === 0}
+              sx={{
+                backgroundColor: "#035140",
+                "&:hover": {
+                  backgroundColor: "#024030",
+                },
+              }}
+            >
+              {createLoading
+                ? "Submitting..."
+                : `Submit ${uploadedData.length} Teachers`}
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={cancelUpload}
+              sx={{
+                borderColor: "#DC2626",
+                color: "#DC2626",
+                "&:hover": {
+                  borderColor: "#B91C1C",
+                  backgroundColor: "rgba(220, 38, 38, 0.04)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
           </div>
-
-          {/* Upload Section */}
-          {showUploadSection && (
-            <Paper sx={{ p: 3, mb: 2, backgroundColor: "#f8f9fa" }}>
-              <Typography variant="h6" gutterBottom>
-                Uploaded Teacher Data ({uploadedData.length} records)
-              </Typography>
-
-              <Box sx={{ maxHeight: 300, overflow: "auto", mb: 2 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-  <thead>
-    <tr style={{ backgroundColor: "#035140", color: "white" }}>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        SL
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Student Name
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Phone
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Session
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Class
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Class Roll
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Section
-      </th>
-      <th
-        style={{
-          padding: "8px",
-          border: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        Stream
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    {uploadedData.map((row, index) => (
-      <tr key={index}>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row.SL}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row["STUDENT NAME"]}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row["PHONE NUMBER"]}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row.SESSION}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row.CLASS}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row["CLASS ROLL"]}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row.SECTION}
-        </td>
-        <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-          {row.STREAM}
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-              </Box>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="contained"
-                  onClick={submitUploadedData}
-                  disabled={createLoading || uploadedData.length === 0}
-                  sx={{
-                    backgroundColor: "#035140",
-                    "&:hover": {
-                      backgroundColor: "#024030",
-                    },
-                  }}
-                >
-                  {createLoading
-                    ? "Submitting..."
-                    : `Submit ${uploadedData.length} Teachers`}
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  onClick={cancelUpload}
-                  sx={{
-                    borderColor: "#DC2626",
-                    color: "#DC2626",
-                    "&:hover": {
-                      borderColor: "#B91C1C",
-                      backgroundColor: "rgba(220, 38, 38, 0.04)",
-                    },
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </Paper>
-          )}
+        </Paper>
+      )}
 
       <Paper>
         {isLoading ? (

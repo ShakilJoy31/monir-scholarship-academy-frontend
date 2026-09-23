@@ -164,7 +164,6 @@ const ResultList = () => {
     stream: "",
   });
 
-
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [studentFilterApplied, setStudentFilterApplied] = useState(false);
 
@@ -201,7 +200,14 @@ const ResultList = () => {
       className: studentFilters.className,
       section: studentFilters.section,
       stream: studentFilters.stream,
-    }, { skip: !studentFilters.session || !studentFilters.section || !studentFilters.className || !studentFilters.stream }
+    },
+    {
+      skip:
+        !studentFilters.session ||
+        !studentFilters.section ||
+        !studentFilters.className ||
+        !studentFilters.stream,
+    }
   );
 
   // Fetch exams for dropdown
@@ -290,7 +296,7 @@ const ResultList = () => {
         Array.isArray(studentsResponse.data) ? studentsResponse.data : []
       );
     }
-  }, [studentsResponse, ]);
+  }, [studentsResponse]);
 
   const handleStudentFilterChange = (key: keyof FilterState, value: string) => {
     setStudentFilters((prev) => ({
@@ -299,19 +305,7 @@ const ResultList = () => {
     }));
   };
 
-  // const resetStudentFilters = () => {
-  //   setStudentFilters({
-  //     session: "",
-  //     className: "",
-  //     section: "",
-  //     stream: "",
-  //   });
-  //   setStudentFilterApplied(false);
-  //   setFilteredStudents([]);
-  // };
-
   // Reset pagination when filters change
-  
   useEffect(() => {
     setPage(0);
   }, [filterExam, filterClass, filterSubject]);
@@ -322,9 +316,6 @@ const ResultList = () => {
 
   const handleOpenAddResultModal = () => {
     setCurrentResult(null);
-    // setSelectedStudent(null);
-    // setSelectedExam(null);
-    // setSelectedSubject(null);
     setMarks("");
     setAddResultModalOpen(true);
   };
@@ -335,9 +326,6 @@ const ResultList = () => {
     setSelectedExam(result.examId);
     setSelectedSubject(result.subjectId);
     setMarks(result.marks.toString());
-
-    // Reset student filters first
-    // resetStudentFilters();
 
     // Then set new filters based on the current result
     if (result.student) {
@@ -352,7 +340,6 @@ const ResultList = () => {
       setStudentFilterApplied(true);
 
       // Force update filtered students by triggering the effect
-      // This ensures the Autocomplete has the correct options
       if (studentsResponse?.data) {
         const filtered = Array.isArray(studentsResponse.data)
           ? studentsResponse.data
@@ -367,21 +354,16 @@ const ResultList = () => {
   const handleCloseAddResultModal = () => {
     setAddResultModalOpen(false);
     setCurrentResult(null);
-    // setSelectedStudent(null);
-    // setSelectedExam(null);
-    // setSelectedSubject(null);
     setMarks("");
-    // resetStudentFilters();
     setIsSubmitting(false);
   };
 
   const handleCreateOrUpdateResult = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Add this to prevent event bubbling
+    e.stopPropagation();
 
     if (isSubmitting) return;
 
-    // Add a submission lock
     const submissionLock = localStorage.getItem("submissionLock");
     if (submissionLock) return;
     localStorage.setItem("submissionLock", "true");
@@ -389,7 +371,6 @@ const ResultList = () => {
     setIsSubmitting(true);
 
     try {
-      // Your existing validation and submission logic
       if (
         !selectedStudent ||
         !selectedExam ||
@@ -413,7 +394,6 @@ const ResultList = () => {
         marks: parseFloat(marks),
       };
 
-      // Only make one API call
       const apiCall = currentResult
         ? updateResult({ id: currentResult.id, ...resultData })
         : createResult(resultData);
@@ -431,17 +411,16 @@ const ResultList = () => {
 
       handleCloseAddResultModal();
     } catch (error) {
-      // Error handling
-      let errorMessage = 'Request failed';
+      let errorMessage = "Request failed";
 
-      if (typeof error === 'object' && error !== null && 'data' in error) {
+      if (typeof error === "object" && error !== null && "data" in error) {
         const apiError = error as { data?: { message?: string } };
         errorMessage = apiError.data?.message || errorMessage;
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
 
-      toastShowing(errorMessage, 'bottom-right', 2000, 'red', 'white');
+      toastShowing(errorMessage, "bottom-right", 2000, "red", "white");
       console.log(error);
     } finally {
       setIsSubmitting(false);
@@ -468,6 +447,17 @@ const ResultList = () => {
     const exam = exams.find((exam: Exam) => exam.id === examId);
     return exam?.name || "N/A";
   };
+
+  // 👇 Compute the list of subjects to show in the dropdown.
+  // If the selected class has GroupSubject mappings, use those.
+  // Otherwise, fall back to the full subjects list.
+  const matchedClass = classes?.find(
+    (cls) => cls.name === studentFilters?.className
+  );
+  const classSubjects =
+    matchedClass?.GroupSubject && matchedClass.GroupSubject.length > 0
+      ? matchedClass.GroupSubject.map((item) => item.subject).filter(Boolean)
+      : subjects;
 
   const columns = [
     {
@@ -532,14 +522,15 @@ const ResultList = () => {
           </div>
           {typeof row.grade === "string" && (
             <span
-              className={`text-xs px-2 py-1 rounded-full ${row.grade === "A+" || row.grade === "A"
-                ? "bg-green-100 text-green-800"
-                : row.grade === "B"
+              className={`text-xs px-2 py-1 rounded-full ${
+                row.grade === "A+" || row.grade === "A"
+                  ? "bg-green-100 text-green-800"
+                  : row.grade === "B"
                   ? "bg-blue-100 text-blue-800"
                   : row.grade === "C"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-red-100 text-red-800"
-                }`}
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-red-100 text-red-800"
+              }`}
             >
               {row.grade as string} (GPA:{" "}
               {typeof row.gradePoint === "number" ? row.gradePoint : "0"})
@@ -556,10 +547,11 @@ const ResultList = () => {
       render: (row: Result) =>
         row.marks !== undefined && row.subject?.passMarks !== undefined ? (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${row.marks >= row.subject.passMarks
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-              }`}
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              row.marks >= row.subject.passMarks
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
           >
             {row.marks >= row.subject.passMarks ? "Passed" : "Failed"}
           </span>
@@ -627,180 +619,180 @@ const ResultList = () => {
 
       {/* Filter Section */}
       <Box
-  sx={{
-    display: "flex",
-    gap: { xs: 1, sm: 2 },
-    mb: 2,
-    flexWrap: "wrap",
-    alignItems: "center",
-    flexDirection: { xs: "column", sm: "row" },
-    width: "100%",
-  }}
->
-  <FormControl 
-    sx={{ 
-      minWidth: { xs: "100%", sm: 200 },
-      width: { xs: "100%", sm: "auto" }
-    }} 
-    variant="outlined"
-    size="small"
-  >
-    <InputLabel
-      id="filter-exam-label"
-      sx={{
-        backgroundColor: "background.paper",
-        px: 1,
-        transform: "translate(14px, -9px) scale(0.75)",
-        "&.Mui-focused": {
-          transform: "translate(14px, -9px) scale(0.75)",
-        },
-      }}
-    >
-      Filter by Exam {theStar}
-    </InputLabel>
-    <Select
-      labelId="filter-exam-label"
-      id="filter-exam"
-      value={filterExam || ""}
-      onChange={(e) => setFilterExam(Number(e.target.value) || null)}
-      sx={{
-        "& .MuiOutlinedInput-notchedOutline": {
-          borderRadius: "6px",
-        },
-        height: { xs: 48, sm: 40 },
-        width: "100%",
-      }}
-      MenuProps={{
-        PaperProps: {
-          sx: {
-            borderRadius: "6px",
-            marginTop: "4px",
-          },
-        },
-      }}
-    >
-      <MenuItem value="">All Exams</MenuItem>
-      {exams.map((exam: Exam) => (
-        <MenuItem key={exam.id} value={exam.id}>
-          {exam.name}
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>
+        sx={{
+          display: "flex",
+          gap: { xs: 1, sm: 2 },
+          mb: 2,
+          flexWrap: "wrap",
+          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
+          width: "100%",
+        }}
+      >
+        <FormControl
+          sx={{
+            minWidth: { xs: "100%", sm: 200 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          variant="outlined"
+          size="small"
+        >
+          <InputLabel
+            id="filter-exam-label"
+            sx={{
+              backgroundColor: "background.paper",
+              px: 1,
+              transform: "translate(14px, -9px) scale(0.75)",
+              "&.Mui-focused": {
+                transform: "translate(14px, -9px) scale(0.75)",
+              },
+            }}
+          >
+            Filter by Exam {theStar}
+          </InputLabel>
+          <Select
+            labelId="filter-exam-label"
+            id="filter-exam"
+            value={filterExam || ""}
+            onChange={(e) => setFilterExam(Number(e.target.value) || null)}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderRadius: "6px",
+              },
+              height: { xs: 48, sm: 40 },
+              width: "100%",
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  borderRadius: "6px",
+                  marginTop: "4px",
+                },
+              },
+            }}
+          >
+            <MenuItem value="">All Exams</MenuItem>
+            {exams.map((exam: Exam) => (
+              <MenuItem key={exam.id} value={exam.id}>
+                {exam.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-  <FormControl 
-    sx={{ 
-      minWidth: { xs: "100%", sm: 200 },
-      width: { xs: "100%", sm: "auto" }
-    }} 
-    variant="outlined"
-    size="small"
-  >
-    <InputLabel
-      id="filter-class-label"
-      sx={{
-        backgroundColor: "background.paper",
-        px: 1,
-        transform: "translate(14px, -9px) scale(0.75)",
-        "&.Mui-focused": {
-          transform: "translate(14px, -9px) scale(0.75)",
-        },
-      }}
-    >
-      Filter by Class {theStar}
-    </InputLabel>
-    <Select
-      labelId="filter-class-label"
-      id="filter-class"
-      value={filterClass || ""}
-      onChange={(e) => setFilterClass(Number(e.target.value) || null)}
-      sx={{
-        "& .MuiOutlinedInput-notchedOutline": {
-          borderRadius: "6px",
-        },
-        height: { xs: 48, sm: 40 },
-        width: "100%",
-      }}
-      MenuProps={{
-        PaperProps: {
-          sx: {
-            borderRadius: "6px",
-            marginTop: "4px",
-          },
-        },
-      }}
-    >
-      <MenuItem value="">All Classes</MenuItem>
-      {allClasses.map((cls: Class) => (
-        <MenuItem key={cls.id} value={cls.id}>
-          {cls.name}
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>
+        <FormControl
+          sx={{
+            minWidth: { xs: "100%", sm: 200 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          variant="outlined"
+          size="small"
+        >
+          <InputLabel
+            id="filter-class-label"
+            sx={{
+              backgroundColor: "background.paper",
+              px: 1,
+              transform: "translate(14px, -9px) scale(0.75)",
+              "&.Mui-focused": {
+                transform: "translate(14px, -9px) scale(0.75)",
+              },
+            }}
+          >
+            Filter by Class {theStar}
+          </InputLabel>
+          <Select
+            labelId="filter-class-label"
+            id="filter-class"
+            value={filterClass || ""}
+            onChange={(e) => setFilterClass(Number(e.target.value) || null)}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderRadius: "6px",
+              },
+              height: { xs: 48, sm: 40 },
+              width: "100%",
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  borderRadius: "6px",
+                  marginTop: "4px",
+                },
+              },
+            }}
+          >
+            <MenuItem value="">All Classes</MenuItem>
+            {allClasses.map((cls: Class) => (
+              <MenuItem key={cls.id} value={cls.id}>
+                {cls.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-  <FormControl 
-    sx={{ 
-      minWidth: { xs: "100%", sm: 200 },
-      width: { xs: "100%", sm: "auto" }
-    }} 
-    variant="outlined"
-    size="small"
-  >
-    <InputLabel
-      id="filter-subject-label"
-      sx={{
-        backgroundColor: "background.paper",
-        px: 1,
-        transform: "translate(14px, -9px) scale(0.75)",
-        "&.Mui-focused": {
-          transform: "translate(14px, -9px) scale(0.75)",
-        },
-      }}
-    >
-      Filter by Subject {theStar}
-    </InputLabel>
-    <Select
-      labelId="filter-subject-label"
-      id="filter-subject"
-      value={filterSubject || ""}
-      onChange={(e) => setFilterSubject(Number(e.target.value) || null)}
-      sx={{
-        "& .MuiOutlinedInput-notchedOutline": {
-          borderRadius: "6px",
-        },
-        height: { xs: 48, sm: 40 },
-        width: "100%",
-      }}
-      MenuProps={{
-        PaperProps: {
-          sx: {
-            borderRadius: "6px",
-            marginTop: "4px",
-          },
-        },
-      }}
-    >
-      <MenuItem value="">All Subjects</MenuItem>
-      {subjects.map((subject: Subject) => (
-        <MenuItem key={subject.id} value={subject.id}>
-          {subject.name}
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>
+        <FormControl
+          sx={{
+            minWidth: { xs: "100%", sm: 200 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          variant="outlined"
+          size="small"
+        >
+          <InputLabel
+            id="filter-subject-label"
+            sx={{
+              backgroundColor: "background.paper",
+              px: 1,
+              transform: "translate(14px, -9px) scale(0.75)",
+              "&.Mui-focused": {
+                transform: "translate(14px, -9px) scale(0.75)",
+              },
+            }}
+          >
+            Filter by Subject {theStar}
+          </InputLabel>
+          <Select
+            labelId="filter-subject-label"
+            id="filter-subject"
+            value={filterSubject || ""}
+            onChange={(e) => setFilterSubject(Number(e.target.value) || null)}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderRadius: "6px",
+              },
+              height: { xs: 48, sm: 40 },
+              width: "100%",
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  borderRadius: "6px",
+                  marginTop: "4px",
+                },
+              },
+            }}
+          >
+            <MenuItem value="">All Subjects</MenuItem>
+            {subjects.map((subject: Subject) => (
+              <MenuItem key={subject.id} value={subject.id}>
+                {subject.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-  <SubmitButton 
-    onClick={applyFilters}
-    sx={{ 
-      width: { xs: "100%", sm: "auto" },
-      minWidth: { xs: "100%", sm: 120 },
-      height: { xs: 48, sm: 40 }
-    }}
-  >
-    Search
-  </SubmitButton>
-</Box>
+        <SubmitButton
+          onClick={applyFilters}
+          sx={{
+            width: { xs: "100%", sm: "auto" },
+            minWidth: { xs: "100%", sm: 120 },
+            height: { xs: 48, sm: 40 },
+          }}
+        >
+          Search
+        </SubmitButton>
+      </Box>
 
       {/* Add/Edit Result Modal */}
       <AnimatePresence>
@@ -1005,7 +997,9 @@ const ResultList = () => {
                   <Autocomplete
                     options={filteredStudents}
                     getOptionLabel={(option) =>
-                      `${option.name} (${option.class?.name || "N/A"}, Roll: ${option.classRoll || "N/A"})`
+                      `${option.name} (${option.class?.name || "N/A"}, Roll: ${
+                        option.classRoll || "N/A"
+                      })`
                     }
                     value={
                       filteredStudents.find(
@@ -1031,13 +1025,16 @@ const ResultList = () => {
                               <Search size={20} style={{ marginRight: 8 }} />
                               {params.InputProps.startAdornment}
                             </>
-                          ), 
+                          ),
                         }}
-                        disabled={!studentFilterApplied || filteredStudents.length === 0}
+                        disabled={
+                          !studentFilterApplied ||
+                          filteredStudents.length === 0
+                        }
                       />
                     )}
                     fullWidth
-                    key={`student-select-${selectedStudent}`} // Add key to force re-render
+                    key={`student-select-${selectedStudent}`}
                   />
 
                   <div className="flex gap-4">
@@ -1051,9 +1048,7 @@ const ResultList = () => {
                         id="exam-select"
                         value={selectedExam || ""}
                         label="Exam"
-                        onChange={(e) =>
-                          setSelectedExam(Number(e.target.value))
-                        }
+                        onChange={(e) => setSelectedExam(Number(e.target.value))}
                         sx={{
                           "& .MuiOutlinedInput-root": {
                             borderRadius: "6px",
@@ -1079,21 +1074,7 @@ const ResultList = () => {
                     </FormControl>
 
                     {/* Subject Select */}
-                    {/* <FormControl fullWidth>
-                      <InputLabel>Subject {theStar}</InputLabel>
-                      <Select
-                        value={subjectId || ''}
-                        onChange={(e) => setSubjectId(Number(e.target.value))}
-                        label="Subject"
-                        disabled={loadingDropdowns || !classNameId}
-                      >
-                        {classes?.find(cls => cls.id === classNameId)?.GroupSubject?.map((subject) => (
-                          <MenuItem key={subject?.subject?.id} value={subject?.subject?.id}>
-                            {subject?.subject?.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl> */}
+                    {/* 👇 FIXED: uses classSubjects (GroupSubject if available, else all subjects) */}
                     <FormControl fullWidth>
                       <InputLabel id="subject-select-label">
                         Subject {theStar}
@@ -1103,7 +1084,9 @@ const ResultList = () => {
                         id="subject-select"
                         value={selectedSubject || ""}
                         label="Subject"
-                        disabled={loadingDropdowns || !studentFilters?.className}
+                        disabled={
+                          loadingDropdowns || !studentFilters?.className
+                        }
                         onChange={(e) =>
                           setSelectedSubject(Number(e.target.value))
                         }
@@ -1123,16 +1106,11 @@ const ResultList = () => {
                           },
                         }}
                       >
-                        {classes?.find(cls => cls.name === studentFilters?.className)?.GroupSubject?.map((subject) => (
-                          <MenuItem key={subject?.subject?.id} value={subject?.subject?.id}>
-                            {subject?.subject?.name}
-                          </MenuItem>
-                        ))}
-                        {/* {subjects.map((subject: Subject) => (
+                        {classSubjects.map((subject) => (
                           <MenuItem key={subject.id} value={subject.id}>
                             {subject.name}
                           </MenuItem>
-                        ))} */}
+                        ))}
                       </Select>
                     </FormControl>
                   </div>
@@ -1150,13 +1128,13 @@ const ResultList = () => {
                     value={marks}
                     onChange={(e) => setMarks(e.target.value)}
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '6px',
-                        '& fieldset': {
-                          borderColor: '#035140',
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "6px",
+                        "& fieldset": {
+                          borderColor: "#035140",
                         },
-                        '&:hover fieldset': {
-                          borderColor: '#035140',
+                        "&:hover fieldset": {
+                          borderColor: "#035140",
                         },
                       },
                     }}
@@ -1242,7 +1220,7 @@ const ResultList = () => {
             <PaginationComponent
               currentPage={page + 1}
               totalPages={totalPages}
-              onPageChange={(newPage) => setPage(newPage - 1)}
+              onPageChange={(newPage) => setPage(page - 1 + newPage)}
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={setRowsPerPage}
             />

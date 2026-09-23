@@ -196,32 +196,31 @@ const UploadMarkSheet = () => {
     setData([]);
   };
 
-  React.useEffect(() => {
-    if (studentsResponse) {
-      // Always update data based on API response, even if empty
-      if (studentsResponse.data.length > 0 && filterSubject) {
-        const subject = subjects.find((s) => s.id === filterSubject);
-        const totalMarks = subject?.marks || 100;
+React.useEffect(() => {
+  // Guard against error responses where `.data` is undefined
+  const rows = Array.isArray(studentsResponse?.data)
+    ? studentsResponse.data
+    : [];
 
-        const studentData = studentsResponse.data.map(
-          (student: Student, index: number) => ({
-            SL: index + 1,
-            "STUDENT ID": student.studentUniqueId,
-            "STUDENT NAME": student.name,
-            "ROLL NO": student.classRoll,
-            "TOTAL MARKS": totalMarks,
-            MARKS: "", // Start with empty marks
-            STATUS: "", // Start with empty status
-          })
-        );
+  if (rows.length > 0 && filterSubject) {
+    const subject = subjects.find((s) => s.id === filterSubject);
+    const totalMarks = subject?.marks || 100;
 
-        setData(studentData);
-      } else {
-        // Clear data when API returns empty array
-        setData([]);
-      }
-    }
-  }, [studentsResponse, filterSubject, subjects]);
+    const studentData = rows.map((student: Student, index: number) => ({
+      SL: index + 1,
+      "STUDENT ID": student.studentUniqueId,
+      "STUDENT NAME": student.name,
+      "ROLL NO": student.classRoll,
+      "TOTAL MARKS": totalMarks,
+      MARKS: "",
+      STATUS: "",
+    }));
+
+    setData(studentData);
+  } else {
+    setData([]);
+  }
+}, [studentsResponse, filterSubject, subjects]);
 
   // Handle input change with proper typing
   const handleInputChange = (
@@ -551,137 +550,193 @@ const handlePrint = () => {
 };
 
 // ===== PDF DOWNLOAD FUNCTION =====
+const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
 const downloadPDF = () => {
-  if (!data.length || !filterExam || !filterClass || !filterSubject) return;
+  // Bail only if there's truly nothing to render.
+  if (!data.length) {
+    toastShowing(
+      "No data available to generate PDF",
+      "bottom-right",
+      2000,
+      "red",
+      "white"
+    );
+    return;
+  }
 
-  const pdf = new jsPDF("portrait", "pt", "a4");
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const margin = 40;
-  let y = 60;
+  if (isDownloadingPdf) return;
+  setIsDownloadingPdf(true);
 
-  // ===== HEADER =====
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
-  pdf.text(branchInfo?.schoolName, pageWidth / 2, y, { align: "center" });
-  y += 25;
+  try {
+    const pdf = new jsPDF("portrait", "pt", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 40;
+    let y = 60;
 
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(16);
-  pdf.text("Mark Sheet", pageWidth / 2, y, { align: "center" });
-  y += 40;
+    // ===== HEADER =====
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text(branchInfo?.schoolName || "School", pageWidth / 2, y, {
+      align: "center",
+    });
+    y += 25;
 
-  // ===== EXAM, CLASS, SUBJECT, DATE (2x2 grid with left/right alignment) =====
-  pdf.setFontSize(12);
-  const examName = exams.find((e) => e.id === filterExam)?.name || "";
-  const className = allClasses.find((c) => c.id === filterClass)?.name || "";
-  const subjectName = subjects.find((s) => s.id === filterSubject)?.name || "";
-  const date = new Date().toLocaleDateString();
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(16);
+    pdf.text("Mark Sheet", pageWidth / 2, y, { align: "center" });
+    y += 40;
 
-  const leftX = margin; // Left aligned
-  const rightX = pageWidth - margin; // Right aligned
+    // ===== EXAM / CLASS / SUBJECT / DATE =====
+    pdf.setFontSize(12);
+    const examName = filterExam
+      ? exams.find((e) => e.id === filterExam)?.name || ""
+      : "";
+    const className = filterClass
+      ? allClasses.find((c) => c.id === filterClass)?.name || ""
+      : "";
+    const subjectName = filterSubject
+      ? subjects.find((s) => s.id === filterSubject)?.name || ""
+      : "";
+    const date = new Date().toLocaleDateString();
 
-  pdf.text(`Exam: ${examName}`, leftX, y, { align: "left" });
-  pdf.text(`Class: ${className}`, rightX, y, { align: "right" });
-  y += 20;
-  pdf.text(`Subject: ${subjectName}`, leftX, y, { align: "left" });
-  pdf.text(`Date: ${date}`, rightX, y, { align: "right" });
-  y += 40;
+    const leftX = margin;
+    const rightX = pageWidth - margin;
 
-  // ===== TABLE SETUP =====
-  const availableWidth = pageWidth - margin * 2;
+    pdf.text(`Exam: ${examName}`, leftX, y, { align: "left" });
+    pdf.text(`Class: ${className}`, rightX, y, { align: "right" });
+    y += 20;
+    pdf.text(`Subject: ${subjectName}`, leftX, y, { align: "left" });
+    pdf.text(`Date: ${date}`, rightX, y, { align: "right" });
+    y += 40;
 
-  const colWidths = [
-    availableWidth * 0.08, // SL
-    availableWidth * 0.28, // STUDENT NAME
-    availableWidth * 0.12, // ROLL NO
-    availableWidth * 0.16, // TOTAL MARKS
-    availableWidth * 0.16, // MARKS
-    availableWidth * 0.20, // STATUS
-  ];
+    // ===== TABLE =====
+    const availableWidth = pageWidth - margin * 2;
+    const colWidths = [
+      availableWidth * 0.08, // SL
+      availableWidth * 0.28, // STUDENT NAME
+      availableWidth * 0.12, // ROLL NO
+      availableWidth * 0.16, // TOTAL MARKS
+      availableWidth * 0.16, // MARKS
+      availableWidth * 0.2, // STATUS
+    ];
 
-  const tableX = margin;
-  let tableY = y;
+    const tableX = margin;
+    let tableY = y;
+    const headers = [
+      "SL",
+      "Student Name",
+      "Roll No",
+      "Total Marks",
+      "Marks",
+      "Status",
+    ];
 
-  // ===== TABLE HEADER =====
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(12);
-  pdf.setTextColor(0, 0, 0);
-
-  const headers = ["SL", "Student Name", "Roll No", "Total Marks", "Marks", "Status"];
-  let x = tableX;
-  headers.forEach((header, i) => {
-    pdf.setFillColor(243, 244, 246);
-    pdf.rect(x, tableY, colWidths[i], 25, "F");
-    pdf.setDrawColor(229, 231, 235);
-    pdf.rect(x, tableY, colWidths[i], 25, "D");
-    pdf.text(header, x + colWidths[i] / 2, tableY + 16, { align: "center" });
-    x += colWidths[i];
-  });
-  tableY += 25;
-
-  // ===== TABLE CONTENT =====
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(11);
-
-  data.forEach((row) => {
-    if (tableY > pdf.internal.pageSize.height - 50) {
-      pdf.addPage();
-      tableY = margin;
-
-      // Redraw headers
+    // Draw header row
+    const drawHeader = () => {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
-      x = tableX;
+      pdf.setTextColor(0, 0, 0);
+      let x = tableX;
       headers.forEach((header, i) => {
         pdf.setFillColor(243, 244, 246);
         pdf.rect(x, tableY, colWidths[i], 25, "F");
         pdf.setDrawColor(229, 231, 235);
         pdf.rect(x, tableY, colWidths[i], 25, "D");
-        pdf.text(header, x + colWidths[i] / 2, tableY + 16, { align: "center" });
+        pdf.text(header, x + colWidths[i] / 2, tableY + 16, {
+          align: "center",
+        });
         x += colWidths[i];
       });
       tableY += 25;
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-    }
+    };
 
-    const rowData = [
-      row.SL.toString(),
-      row["STUDENT NAME"],
-      row["ROLL NO"].toString(),
-      row["TOTAL MARKS"].toString(),
-      row["MARKS"],
-      row["STATUS"],
-    ];
+    drawHeader();
 
-    x = tableX;
-    rowData.forEach((data, i) => {
-      pdf.setDrawColor(229, 231, 235);
-      pdf.rect(x, tableY, colWidths[i], 25, "D");
+    // Draw body rows
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
 
-      const align = i === 1 ? "left" : "center";
-      const padding = i === 1 ? 10 : 0;
+    data.forEach((row) => {
+      // Page break if needed
+      if (tableY > pdf.internal.pageSize.height - 50) {
+        pdf.addPage();
+        tableY = margin;
+        drawHeader();
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(11);
+      }
 
-      pdf.text(
-        data,
-        x + (align === "center" ? colWidths[i] / 2 : padding),
-        tableY + 16,
-        { align, maxWidth: colWidths[i] - 10 }
-      );
+      const rowData = [
+        String(row.SL ?? ""),
+        String(row["STUDENT NAME"] ?? ""),
+        String(row["ROLL NO"] ?? ""),
+        String(row["TOTAL MARKS"] ?? ""),
+        String(row["MARKS"] ?? ""),
+        String(row["STATUS"] ?? ""),
+      ];
 
-      x += colWidths[i];
+      let x = tableX;
+      rowData.forEach((cell, i) => {
+        pdf.setDrawColor(229, 231, 235);
+        pdf.rect(x, tableY, colWidths[i], 25, "D");
+
+        const align: "left" | "center" = i === 1 ? "left" : "center";
+        const padding = i === 1 ? 10 : 0;
+
+        pdf.text(
+          cell,
+          x + (align === "center" ? colWidths[i] / 2 : padding),
+          tableY + 16,
+          { align, maxWidth: colWidths[i] - 10 }
+        );
+
+        x += colWidths[i];
+      });
+
+      tableY += 25;
     });
 
-    tableY += 25;
-  });
+    // ===== FOOTER (signature line) =====
+    const footerY = pdf.internal.pageSize.height - 40;
+    pdf.setFontSize(12);
+    pdf.setDrawColor(0, 0, 0);
+    pdf.line(
+      pageWidth - margin - 100,
+      footerY + 5,
+      pageWidth - margin,
+      footerY + 5
+    );
+    pdf.text("Principal's Signature", pageWidth - margin - 100, footerY + 20, {
+      align: "left",
+    });
 
-  // ===== FOOTER =====
-  const footerY = pdf.internal.pageSize.height - 40;
-  pdf.setFontSize(12);
-  pdf.setDrawColor(0, 0, 0);
-  pdf.line(pageWidth - margin - 100, footerY + 5, pageWidth - margin, footerY + 5);
+    // ===== SAVE =====
+    const safeFileName = `marksheet_${examName || "exam"}_${
+      className || "class"
+    }_${subjectName || "subject"}.pdf`.replace(/[^\w\-.]+/g, "_");
 
-  pdf.save(`marksheet_${examName}_${className}_${subjectName}.pdf`);
+    pdf.save(safeFileName);
+
+    toastShowing(
+      "PDF downloaded successfully",
+      "bottom-right",
+      2000,
+      "green",
+      "white"
+    );
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    toastShowing(
+      "Failed to generate PDF. Please try again.",
+      "bottom-right",
+      2000,
+      "red",
+      "white"
+    );
+  } finally {
+    setIsDownloadingPdf(false);
+  }
 };
 
 

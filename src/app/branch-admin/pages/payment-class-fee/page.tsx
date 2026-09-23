@@ -275,8 +275,8 @@ const ClassFeePayList = () => {
 
     const { data: accountsResponse } = useGetAllAccountsQuery({ type: 'All' });
 
-    const { 
-        data: feePayDetails,isLoading: isFeePayDetailsLoading 
+    const {
+        data: feePayDetails, isLoading: isFeePayDetailsLoading
     } = useGetClassFeePayByIdQuery(
         currentFeePay?.id || 0,
         { skip: !currentFeePay?.id }
@@ -300,7 +300,14 @@ const ClassFeePayList = () => {
     const [deleteFeePay] = useDeleteClassFeePayMutation();
 
     const accounts = useMemo(() => accountsResponse?.data || [], [accountsResponse?.data]);
-    const feePays: ClassFeePay[] = responseData?.data || [];
+
+
+    const feePays: ClassFeePay[] = useMemo(
+        () => responseData?.data || [],
+        [responseData?.data]
+    );
+
+
     const totalPages = responseData?.meta?.totalPage || 1;
 
     const accountMap = useMemo(() => {
@@ -555,7 +562,7 @@ const ClassFeePayList = () => {
 
     useEffect(() => {
         if (feePays) {
-            const filtered = feePays?.map((student: ClassFeePay) => ({
+            const filtered = feePays.map((student: ClassFeePay) => ({
                 ...student,
                 selected: false,
             }));

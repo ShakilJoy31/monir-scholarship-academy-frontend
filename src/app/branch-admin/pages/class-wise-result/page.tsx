@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -55,6 +55,7 @@ const ClassWiseResult = () => {
   const [filterExam, setFilterExam] = useState<number | null>(null);
   const [filterClass, setFilterClass] = useState<number | null>(null);
   const [isSearched, setIsSearched] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Fetch exams for dropdown
   const { data: examsResponse } = useGetAllExamsQuery({});
@@ -80,19 +81,31 @@ const ClassWiseResult = () => {
     }
   );
 
+  // Fetching branch name, email, address and logo.
+  const userInfo = getUserInfoFromToken();
+  const { data: branchConfigData } = useGetBranchConfigQuery(
+    userInfo?.branchId
+  );
 
-  // Fetching branch name, email, address and logo. 
-      const userInfo = getUserInfoFromToken();
-  const { data: branchConfigData } = useGetBranchConfigQuery(userInfo?.branchId)
-
-      const branchInfo = branchConfigData?.data;
-  console.log("branchInfo", branchInfo);
+  const branchInfo = branchConfigData?.data;
 
   const exams: Exam[] = examsResponse?.data || [];
   const allClasses: Class[] = Array.isArray(classesResponse?.data)
     ? classesResponse.data
     : classesResponse?.data || [];
   const results: StudentResult[] = resultsResponse?.data || [];
+
+  // ✅ Compute the full list of unique subjects across ALL students.
+  // This is the correct source of truth for the column headers.
+  const allSubjects = useMemo(() => {
+    const set = new Set<string>();
+    results.forEach((student) => {
+      student.results?.forEach((r) => {
+        if (r.subject) set.add(r.subject);
+      });
+    });
+    return Array.from(set);
+  }, [results]);
 
   const applyFilters = () => {
     setIsSearched(true);
@@ -104,16 +117,17 @@ const ClassWiseResult = () => {
     setIsSearched(false);
   };
 
-
+  //! =================== PRINT ===================
   const handlePrint = () => {
     if (!results.length || !filterExam || !filterClass) return;
 
     const examName = exams.find((e) => e.id === filterExam)?.name || "";
     const className = allClasses.find((c) => c.id === filterClass)?.name || "";
 
-    const printWindow = window.open("", "", "width=1000,height=600");
-    if (printWindow) {
-      printWindow.document.write(`
+    const printWindow = window.open("", "", "width=1200,height=800");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
       <html>
         <head>
           <title>Class Results - ${examName} - ${className}</title>
@@ -125,7 +139,7 @@ const ClassWiseResult = () => {
             .exam-info { font-size: 12pt; color: #555; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
             th { background-color: #f2f2f2; color: #000; text-align: center; padding: 8px; border: 1px solid #ddd; }
-            td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+            td { padding: 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; }
             .footer { margin-top: 50px; text-align: right; }
             .signature { border-top: 1px solid #000; width: 200px; padding-top: 5px; display: inline-block; }
             .student-name { text-align: left; padding-left: 10px !important; }
@@ -136,7 +150,7 @@ const ClassWiseResult = () => {
         </head>
         <body>
           <div class="header">
-            <div class="school-name">${branchInfo?.schoolName}</div>
+            <div class="school-name">${branchInfo?.schoolName || ""}</div>
             <div class="title">Class Wise Results</div>
             <div class="exam-info">
               Exam: ${examName} | Class: ${className} | Date: ${new Date().toLocaleDateString()}
@@ -148,21 +162,7 @@ const ClassWiseResult = () => {
                 <th>SL</th>
                 <th>Student Name</th>
                 <th>Roll</th>
-    `);
-
-      // Write subject headers
-      const allSubjects = Array.from(
-        new Set(
-          results.flatMap((student) =>
-            student.results.map((result) => result.subject)
-          )
-        ));
-
-      allSubjects.forEach(subject => {
-        printWindow.document.write(`<th>${subject}</th>`);
-      });
-
-      printWindow.document.write(`
+                ${allSubjects.map((s) => `<th>${s}</th>`).join("")}
                 <th>GPA</th>
                 <th>Status</th>
               </tr>
@@ -170,255 +170,281 @@ const ClassWiseResult = () => {
             <tbody>
     `);
 
-      // Write table rows
-      results.forEach((student, index) => {
-        const statusClass = student.status === "PASSED" ? "passed" :
-          student.status === "FAILED" ? "failed" : "incomplete";
+    results.forEach((student, index) => {
+      const statusClass =
+        student.status === "PASSED"
+          ? "passed"
+          : student.status === "FAILED"
+          ? "failed"
+          : "incomplete";
 
-        printWindow.document.write(`
-        <tr class="${statusClass}">
-          <td>${index + 1}</td>
-          <td class="student-name">${student.name}</td>
-          <td>${student.roll}</td>
-      `);
+      const subjectMap = new Map(
+        student.results.map((r) => [r.subject, r])
+      );
 
-        // Write subject marks
-        const subjectMarksMap = new Map(
-          student.results.map((result) => [result.subject, result])
-        );
-
-        allSubjects.forEach(subject => {
-          const result = subjectMarksMap.get(subject);
-          if (result) {
-            printWindow.document.write(`
+      const subjectCells = allSubjects
+        .map((subject) => {
+          const result = subjectMap.get(subject);
+          if (!result) return `<td>-</td>`;
+          return `
             <td>
               ${result.marks}<br>
               <small>${result.grade} (GPA ${result.gradePoint})</small>
             </td>
-          `);
-          } else {
-            printWindow.document.write(`<td>-</td>`);
-          }
-        });
+          `;
+        })
+        .join("");
 
-        printWindow.document.write(`
-          <td>${student.gpa?.toFixed(2) || "-"}</td>
+      printWindow.document.write(`
+        <tr class="${statusClass}">
+          <td>${index + 1}</td>
+          <td class="student-name">${student.name}</td>
+          <td>${student.roll}</td>
+          ${subjectCells}
+          <td>${student.gpa !== null ? student.gpa.toFixed(2) : "-"}</td>
           <td>${student.status}</td>
         </tr>
       `);
-      });
+    });
 
-      printWindow.document.write(`
+    printWindow.document.write(`
             </tbody>
           </table>
-         <div style="display: flex; justify-content: flex-end;">
+          <div style="display: flex; justify-content: flex-end;">
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <img src="${branchInfo?.principalSignature}" width="70" height="60" alt="Principal Signature" style="object-fit: cover; margin-bottom: 10px;" />
-                <div class="signature">Principal's Signature</div>
+              <img src="${branchInfo?.principalSignature || ""}" width="70" height="60" alt="Principal Signature" style="object-fit: cover; margin-bottom: 10px;" />
+              <div class="signature">Principal's Signature</div>
             </div>
-        </div>
+          </div>
         </body>
       </html>
     `);
 
-      printWindow.document.close();
-      printWindow.focus();
+    printWindow.document.close();
+    printWindow.focus();
 
-      // Wait for content to load before printing
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    }
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   };
-  //
 
+  //! =================== PDF DOWNLOAD (jsPDF only, no DOM) ===================
   const downloadPDF = async () => {
     if (!results.length || !filterExam || !filterClass) return;
+    if (isDownloading) return;
 
-    const examName = exams.find((e) => e.id === filterExam)?.name || "";
-    const className = allClasses.find((c) => c.id === filterClass)?.name || "";
+    setIsDownloading(true);
 
-    const allSubjects = Array.from(new Set(results.flatMap(student => student.results.map(r => r.subject))));
+    try {
+      const examName = exams.find((e) => e.id === filterExam)?.name || "";
+      const className =
+        allClasses.find((c) => c.id === filterClass)?.name || "";
 
-    // Fixed widths
-    const fixedColWidths = {
-      sl: 30,
-      roll: 40,
-      gpa: 50,
-      status: 80
-    };
+      // Fixed column widths
+      const fixedColWidths = {
+        sl: 30,
+        name: 130,
+        roll: 45,
+        gpa: 55,
+        status: 80,
+      };
+      const subjectWidth = 95;
 
-    const nameWidth = 120;
-    const subjectMinWidth = 80;
-    const subjectWidth = Math.max(subjectMinWidth, 80);
-    const totalSubjectWidth = subjectWidth * allSubjects.length;
+      const totalWidth =
+        fixedColWidths.sl +
+        fixedColWidths.name +
+        fixedColWidths.roll +
+        subjectWidth * allSubjects.length +
+        fixedColWidths.gpa +
+        fixedColWidths.status;
 
-    const totalWidth =
-      fixedColWidths.sl + nameWidth + fixedColWidths.roll + totalSubjectWidth + fixedColWidths.gpa + fixedColWidths.status;
+      const margin = 30;
+      const pageHeight = 595; // A4 landscape height (pt)
+      const pageWidth = Math.max(totalWidth + margin * 2, 842); // min A4 landscape width
 
-    const margin = 40;
-    const pageHeight = 595; // A4 height (landscape)
-    const pageWidth = totalWidth + margin * 2;
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: [pageWidth, pageHeight],
+      });
 
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: [pageWidth, pageHeight],
-    });
+      let y = 50;
 
-    let y = 60;
+      // ---- Header ----
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.text(branchInfo?.schoolName || "", pageWidth / 2, y, {
+        align: "center",
+      });
+      y += 22;
 
-    // ===== Header =====
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.text(branchInfo?.schoolName, pageWidth / 2, y, { align: "center" });
-    y += 25;
+      pdf.setFontSize(13);
+      pdf.text("Class Wise Results", pageWidth / 2, y, { align: "center" });
+      y += 22;
 
-    pdf.setFontSize(16);
-    pdf.text("Class Wise Results", pageWidth / 2, y, { align: "center" });
-    y += 30;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12);
-    pdf.setTextColor(85);
-    pdf.text(`Exam: ${examName} | Class: ${className} | Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, y, {
-      align: "center",
-    });
-    y += 30;
-
-    // ===== Table =====
-    const colWidths = [
-      fixedColWidths.sl,
-      nameWidth,
-      fixedColWidths.roll,
-      ...Array(allSubjects.length).fill(subjectWidth),
-      fixedColWidths.gpa,
-      fixedColWidths.status,
-    ];
-
-    const headers = ["SL", "Student Name", "Roll", ...allSubjects, "GPA", "Status"];
-
-    const wrapText = (text: string, width: number, fontSize: number) => {
-      pdf.setFontSize(fontSize);
-      return pdf.splitTextToSize(text, width - 4);
-    };
-
-    const drawRow = (cells: string[], yPos: number, isHeader = false) => {
-      let x = margin;
-      pdf.setFont("helvetica", isHeader ? "bold" : "normal");
-      pdf.setFontSize(isHeader ? 10 : 9);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.setTextColor(85);
+      pdf.text(
+        `Exam: ${examName} | Class: ${className} | Date: ${new Date().toLocaleDateString()}`,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
       pdf.setTextColor(0);
+      y += 22;
 
-      const rowHeight = 30;
-
-      for (let i = 0; i < cells.length; i++) {
-        const width = colWidths[i];
-        const cellText = wrapText(cells[i], width, isHeader ? 10 : 9);
-        pdf.rect(x, yPos, width, rowHeight);
-        cellText.forEach((line: string | string[], lineIndex: number) => {
-          pdf.text(line, x + (i === 1 && !isHeader ? 5 : width / 2), yPos + 12 + lineIndex * 10, {
-            align: i === 1 && !isHeader ? "left" : "center",
-          });
-        });
-        x += width;
-      }
-
-      return rowHeight;
-    };
-
-    // Draw headers
-    const headerHeight = drawRow(headers, y, true);
-    y += headerHeight;
-
-    for (let index = 0; index < results.length; index++) {
-      const student = results[index];
-
-      if (y > pageHeight - 80) {
-        pdf.addPage([pageWidth, pageHeight], "landscape");
-        y = 60;
-        drawRow(headers, y, true);
-        y += headerHeight;
-      }
-
-      const subjectMarksMap = new Map(student.results.map((result) => [result.subject, result]));
-
-      const row: string[] = [
-        (index + 1).toString(),
-        student.name,
-        student.roll.toString(),
-        ...allSubjects.map((subject) => {
-          const result = subjectMarksMap.get(subject);
-          return result ? `${result.marks}\n${result.grade} (GPA ${result.gradePoint})` : "-";
-        }),
-        student.gpa?.toFixed(2) || "-",
-        student.status,
+      // ---- Column setup ----
+      const colWidths = [
+        fixedColWidths.sl,
+        fixedColWidths.name,
+        fixedColWidths.roll,
+        ...Array(allSubjects.length).fill(subjectWidth),
+        fixedColWidths.gpa,
+        fixedColWidths.status,
       ];
 
-      const rowHeight = drawRow(row, y);
-      y += rowHeight;
-    }
+      const headers = [
+        "SL",
+        "Student Name",
+        "Roll",
+        ...allSubjects,
+        "GPA",
+        "Status",
+      ];
 
-    // ===== Footer Section =====
-    const footerY = pageHeight - 40;
+      const drawRow = (
+        cells: string[],
+        yPos: number,
+        isHeader = false,
+        rowHeight = 26
+      ) => {
+        let x = margin;
+        pdf.setFont("helvetica", isHeader ? "bold" : "normal");
+        pdf.setFontSize(isHeader ? 9 : 8);
+        pdf.setTextColor(0);
 
-    // Position the signature block on the right side
-    const blockWidth = 200; // width of the signature block (line + text)
-    const blockRightMargin = 0; // distance from the right page edge
+        for (let i = 0; i < cells.length; i++) {
+          const width = colWidths[i];
+          pdf.rect(x, yPos, width, rowHeight);
 
-    // ---- Principal Image (centered above the line)
-    if (branchInfo?.principalSignature) {
-      try {
-        const tempDiv = document.createElement("div");
-        tempDiv.style.position = "absolute";
-        tempDiv.style.left = "-9999px";
-        tempDiv.style.top = "0";
-        tempDiv.innerHTML = `
-        <img src="${branchInfo.principalSignature}" 
-             width="100" 
-             height="90" 
-             alt="Principal Signature"
-             style="object-fit: contain;" />
-      `;
-        document.body.appendChild(tempDiv);
+          // Left-align the student name column (index 1)
+          const align = i === 1 ? "left" : "center";
+          const textX = i === 1 ? x + 4 : x + width / 2;
 
-        const canvas = await html2canvas(tempDiv, {
-          useCORS: true,
-          scale: 2,
-          logging: false,
+          // Handle newlines in subject cells (marks\nGrade)
+          const lines = String(cells[i]).split("\n");
+          lines.forEach((line, idx) => {
+            pdf.text(line, textX, yPos + 11 + idx * 10, { align });
+          });
+
+          x += width;
+        }
+      };
+
+      // ---- Header row ----
+      drawRow(headers, y, true, 28);
+      y += 28;
+
+      // ---- Data rows ----
+      for (let index = 0; index < results.length; index++) {
+        const student = results[index];
+
+        // Page break if needed
+        if (y > pageHeight - 90) {
+          pdf.addPage([pageWidth, pageHeight], "landscape");
+          y = 50;
+          drawRow(headers, y, true, 28);
+          y += 28;
+        }
+
+        const subjectMap = new Map(
+          student.results.map((r) => [r.subject, r])
+        );
+
+        const subjectCells = allSubjects.map((subject) => {
+          const r = subjectMap.get(subject);
+          if (!r) return "-";
+          return `${r.marks}\n${r.grade} (${r.gradePoint})`;
         });
 
-        const imgData = canvas.toDataURL("image/png");
-        const signatureWidth = 70;
-        const signatureHeight = 60;
-        const signatureCenterX = pageWidth - margin - blockRightMargin - blockWidth / 2;
-        const signatureX = signatureCenterX - signatureWidth / 2;
-        const signatureY = footerY - 75;
+        const row = [
+          String(index + 1),
+          student.name,
+          String(student.roll),
+          ...subjectCells,
+          student.gpa !== null ? student.gpa.toFixed(2) : "-",
+          student.status,
+        ];
 
-        pdf.addImage(imgData, "PNG", signatureX, signatureY, signatureWidth, signatureHeight);
-
-        document.body.removeChild(tempDiv);
-      } catch (error) {
-        console.error("Error adding signature image to PDF:", error);
+        drawRow(row, y, false, 30);
+        y += 30;
       }
+
+      // ---- Principal signature (bottom-right of last page) ----
+      const footerY = pageHeight - 40;
+      const blockWidth = 180;
+      const lineEndX = pageWidth - margin;
+      const lineStartX = lineEndX - blockWidth;
+
+      if (branchInfo?.principalSignature) {
+        try {
+          const tempDiv = document.createElement("div");
+          tempDiv.style.position = "absolute";
+          tempDiv.style.left = "-9999px";
+          tempDiv.style.top = "0";
+          tempDiv.innerHTML = `
+            <img src="${branchInfo.principalSignature}"
+                 width="100"
+                 height="90"
+                 alt="Principal Signature"
+                 style="object-fit: contain;" />
+          `;
+          document.body.appendChild(tempDiv);
+
+          const canvas = await html2canvas(tempDiv, {
+            useCORS: true,
+            scale: 2,
+            logging: false,
+          });
+
+          const imgData = canvas.toDataURL("image/png");
+          const sigW = 70;
+          const sigH = 60;
+          const sigX = lineEndX - blockWidth / 2 - sigW / 2;
+          const sigY = footerY - 70;
+
+          pdf.addImage(imgData, "PNG", sigX, sigY, sigW, sigH);
+
+          document.body.removeChild(tempDiv);
+        } catch (error) {
+          console.error("Error adding signature image to PDF:", error);
+        }
+      }
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text(
+        "Principal's Signature",
+        (lineStartX + lineEndX) / 2,
+        footerY,
+        { align: "center" }
+      );
+      pdf.line(lineStartX, footerY + 5, lineEndX, footerY + 5);
+
+      pdf.save(`Class_Results_${examName}_${className}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setIsDownloading(false);
     }
-
-    // ---- Signature Line and Text (right side)
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12);
-    pdf.setTextColor(0);
-
-    const lineWidth = 200;
-    const lineEndX = pageWidth - margin - blockRightMargin;
-    const lineStartX = lineEndX - lineWidth;
-
-    pdf.line(lineStartX, footerY + 5, lineEndX, footerY + 5);
-    pdf.text("Principal's Signature", (lineStartX + lineEndX) / 2, footerY, { align: "center" });
-
-    pdf.save(`Class_Results_${examName}_${className}.pdf`);
   };
 
-
+  //! =================== TABLE COLUMNS ===================
+  // Fixed: the subject columns now come from `allSubjects` (union of all
+  // students' subjects) instead of `results[0].results`, so every student's
+  // marks line up under the correct subject.
   const columns = [
     {
       key: "sl",
@@ -445,42 +471,40 @@ const ClassWiseResult = () => {
       align: "center",
       width: 100,
     },
-    ...(results[0]?.results?.map((subjectResult) => ({
-      key: `subject-${subjectResult.subject}`,
+    ...allSubjects.map((subject) => ({
+      key: `subject-${subject}`,
       header: (
-        <div className="flex justify-center w-full">
-          {subjectResult.subject}
-        </div>
+        <div className="flex justify-center w-full">{subject}</div>
       ),
       render: (row: StudentResult) => {
-        const result = row.results.find(
-          (r) => r.subject === subjectResult.subject
-        );
-        return result ? (
-          <div className="flex justify-start">
+        const result = row.results.find((r) => r.subject === subject);
+        if (!result) {
+          return <span className="text-gray-400">-</span>;
+        }
+        return (
+          <div className="flex justify-center">
             <div className="flex flex-col items-center w-44">
               <span className="font-medium">{result.marks}</span>
               <span
-                className={`text-xs px-2 py-1 rounded-full ${result.grade === "A+" || result.grade === "A"
-                  ? "bg-green-100 text-green-800"
-                  : result.grade === "B"
+                className={`text-xs px-2 py-1 rounded-full ${
+                  result.grade === "A+" || result.grade === "A"
+                    ? "bg-green-100 text-green-800"
+                    : result.grade === "B"
                     ? "bg-blue-100 text-blue-800"
                     : result.grade === "C"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }`}
               >
                 {result.grade} (GPA: {result.gradePoint})
               </span>
             </div>
           </div>
-        ) : (
-          ""
         );
       },
-      align: "center",
+      align: "center" as const,
       width: 120,
-    })) || []),
+    })),
     {
       key: "gpa",
       header: "GPA",
@@ -498,12 +522,13 @@ const ClassWiseResult = () => {
       header: "Status",
       render: (row: StudentResult) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === "PASSED"
-            ? "bg-green-100 text-green-800"
-            : row.status === "FAILED"
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            row.status === "PASSED"
+              ? "bg-green-100 text-green-800"
+              : row.status === "FAILED"
               ? "bg-red-100 text-red-800"
               : "bg-yellow-100 text-yellow-800"
-            }`}
+          }`}
         >
           {row.status}
         </span>
@@ -540,7 +565,10 @@ const ClassWiseResult = () => {
             flexDirection: { xs: "column", sm: "row" },
           }}
         >
-          <FormControl sx={{ minWidth: 200, width: { xs: "100%", sm: "50%" } }} variant="outlined">
+          <FormControl
+            sx={{ minWidth: 200, width: { xs: "100%", sm: "50%" } }}
+            variant="outlined"
+          >
             <InputLabel
               id="filter-exam-label"
               sx={{
@@ -558,7 +586,9 @@ const ClassWiseResult = () => {
               labelId="filter-exam-label"
               id="filter-exam"
               value={filterExam || ""}
-              onChange={(e) => setFilterExam(Number(e.target.value) || null)}
+              onChange={(e) =>
+                setFilterExam(Number(e.target.value) || null)
+              }
               sx={{
                 "& .MuiOutlinedInput-notchedOutline": {
                   borderRadius: "6px",
@@ -584,7 +614,10 @@ const ClassWiseResult = () => {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: 200, width: { xs: "100%", sm: "50%" } }} variant="outlined">
+          <FormControl
+            sx={{ minWidth: 200, width: { xs: "100%", sm: "50%" } }}
+            variant="outlined"
+          >
             <InputLabel
               id="filter-class-label"
               sx={{
@@ -602,7 +635,9 @@ const ClassWiseResult = () => {
               labelId="filter-class-label"
               id="filter-class"
               value={filterClass || ""}
-              onChange={(e) => setFilterClass(Number(e.target.value) || null)}
+              onChange={(e) =>
+                setFilterClass(Number(e.target.value) || null)
+              }
               sx={{
                 "& .MuiOutlinedInput-notchedOutline": {
                   borderRadius: "6px",
@@ -653,7 +688,9 @@ const ClassWiseResult = () => {
             }}
           >
             <SubmitButton onClick={handlePrint}>Print</SubmitButton>
-            <CancelButton onClick={downloadPDF}>PDF</CancelButton>
+            <CancelButton onClick={downloadPDF} disabled={isDownloading}>
+              {isDownloading ? "Generating..." : "PDF"}
+            </CancelButton>
           </Box>
         </div>
       )}
