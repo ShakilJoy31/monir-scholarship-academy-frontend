@@ -363,7 +363,10 @@ const ExamFeeList = () => {
         useBulkCancelExamFeePayMutation();
 
     const accounts = useMemo(() => accountsResponse?.data || [], [accountsResponse?.data]);
-    const feePays: ExamFeePay[] = responseData?.data || [];
+    const feePays: ExamFeePay[] = useMemo(
+        () => responseData?.data || [],
+        [responseData?.data]
+    );
     const totalPages = responseData?.meta?.totalPage || 1;
 
     const [approveFeePay, setApproveFeePay] = useState(false);
@@ -372,7 +375,7 @@ const ExamFeeList = () => {
 
     useEffect(() => {
         if (feePays) {
-            const filtered = feePays?.map((student: ExamFeePay) => ({
+            const filtered = feePays.map((student: ExamFeePay) => ({
                 ...student,
                 selected: false,
             }));
@@ -960,7 +963,7 @@ const ExamFeeList = () => {
                     <Button
                         variant="contained"
                         onClick={handleBulkSubmit}
-                        disabled={!filteredStudents?.find((student) => student.selected)  || !selectedBulkActionType}
+                        disabled={!filteredStudents?.find((student) => student.selected) || !selectedBulkActionType}
                         sx={{
                             backgroundColor: '#035140',
                             '&:hover': {

@@ -40,7 +40,7 @@ interface AddEditStudentExamFeeAssignProps {
   onErrorDismiss: () => void;
   title: string;
   exams: { id: number; name: string }[];
-  examFees: { id: number; name: string; amount: number }[];
+  examFees: { id: number; name: string; amount: number; examNameId: number }[];
 }
 
 interface Student {
@@ -150,18 +150,20 @@ const AddEditStudentExamFeeAssign = ({
   // Filter exam fees based on selected exam
   const filteredExamFees = React.useMemo(() => {
     if (!currentExamId || !examFees) return [];
-    return examFees;
+    return examFees.filter((fee) => fee.examNameId === currentExamId);
   }, [currentExamId, examFees]);
 
   // When exam changes, reset exam fee if it's no longer valid
   useEffect(() => {
     if (currentExamId && watch("examFeeId")) {
-      const examFeeExists = examFees.some(fee => fee.id === watch("examFeeId"));
+      const examFeeExists = filteredExamFees.some(
+        (fee) => fee.id === watch("examFeeId")
+      );
       if (!examFeeExists) {
         setValue("examFeeId", 0);
       }
     }
-  }, [currentExamId, examFees, watch, setValue]);
+  }, [currentExamId, filteredExamFees, watch, setValue]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

@@ -53,7 +53,7 @@ interface AddEditExamFeeProps {
   sessions: { id: number; name: string }[];
   sections: { id: number; name: string }[];
   streams: { id: number; name: string }[];
-  exams: { id: number; name: string }[];
+  exams: { id: number; name: string; sessionYearId: number }[];
 }
 
 const AddEditExamFee = ({
@@ -94,7 +94,26 @@ const AddEditExamFee = ({
     reset,
     formState: { errors },
     register,
+    watch,
+    setValue,
   } = methods;
+
+  const selectedSessionYearId = watch("sessionYearId");
+
+  // Filter exams based on selected session year
+  const filteredExams = React.useMemo(() => {
+    if (!selectedSessionYearId) return [];
+    return exams.filter((exam) => exam.sessionYearId === selectedSessionYearId);
+  }, [exams, selectedSessionYearId]);
+
+  // Reset examNameId when session changes (and it's not the initial load)
+  const prevSessionRef = React.useRef<number | undefined>(undefined);
+  React.useEffect(() => {
+    if (prevSessionRef.current !== undefined && prevSessionRef.current !== selectedSessionYearId) {
+      setValue("examNameId", 0);
+    }
+    prevSessionRef.current = selectedSessionYearId;
+  }, [selectedSessionYearId, setValue]);
 
   React.useEffect(() => {
     if (currentData) {
@@ -232,7 +251,7 @@ const AddEditExamFee = ({
                   {...register("examNameId", { valueAsNumber: true })}
                   defaultValue={currentData?.data.examNameId || 0}
                 >
-                  {exams.map((exam) => (
+                  {filteredExams.map((exam) => (
                     <MenuItem key={exam.id} value={exam.id}>
                       {exam.name}
                     </MenuItem>
